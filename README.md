@@ -1,2 +1,1 @@
-# Lab2
-Fresh repository with main branch.
+#MAIN PROJECT REPO FOR GROUP 38
