@@ -54,7 +54,7 @@ export class GameScreenController extends ScreenController {
 				this.view.updateTimer(timeRemaining);
 				if (timeRemaining <= 0)
 				{
-					this.endGame();
+					// this.endGame();
 				}
 			}, 1000 
 		);
