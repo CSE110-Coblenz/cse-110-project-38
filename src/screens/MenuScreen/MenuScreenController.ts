@@ -22,8 +22,8 @@ export class MenuScreenController extends ScreenController {
 	 */
 	private handleStartClick(): void {
 		// TODO: Task 1 - Implement screen transition from menu to game
-		this.screenSwitcher.switchToScreen({ type: "game" });
-		
+		this.screenSwitcher.switchToScreen({ type: "result", score: 10 });
+
 
 	}
 

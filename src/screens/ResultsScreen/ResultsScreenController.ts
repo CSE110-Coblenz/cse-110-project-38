@@ -17,16 +17,11 @@ export class ResultsScreenController extends ScreenController {
 	private view: ResultsScreenView;
 	private screenSwitcher: ScreenSwitcher;
 
-	private gameOverSound: HTMLAudioElement;
-
 	constructor(screenSwitcher: ScreenSwitcher) {
 		super();
 		this.screenSwitcher = screenSwitcher;
 		this.model = new ResultsScreenModel();
 		this.view = new ResultsScreenView(() => this.handlePlayAgainClick());
-
-		// TODO: Task 4 - Initialize game over sound audio
-		this.gameOverSound = new Audio("/gameover.mp3"); // Placeholder
 	}
 
 	/**
@@ -49,10 +44,6 @@ export class ResultsScreenController extends ScreenController {
 		this.view.updateLeaderboard(top5);
 
 		this.view.show();
-
-		// TODO: Task 4 - Play the game over sound
-		this.gameOverSound.play();
-		this.gameOverSound.currentTime = 0;
 	}
 
 	/**
@@ -63,8 +54,7 @@ export class ResultsScreenController extends ScreenController {
 		//return []; // Placeholder
 		const saved = localStorage.getItem(LEADERBOARD_KEY);
 
-		if (saved != null) 
-			{
+		if (saved != null) {
 			// If nothing saved yet, return an empty array
 			const loadedData = JSON.parse(saved);
 			return loadedData;
@@ -78,7 +68,7 @@ export class ResultsScreenController extends ScreenController {
 	private saveLeaderboard(entries: LeaderboardEntry[]): void {
 		// TODO: Task 5 - Save leaderboard to localStorage
 		const data = JSON.stringify(entries);
-		localStorage.setItem(LEADERBOARD_KEY,data);
+		localStorage.setItem(LEADERBOARD_KEY, data);
 	}
 
 	/**
