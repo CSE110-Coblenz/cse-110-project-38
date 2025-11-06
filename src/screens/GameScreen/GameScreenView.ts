@@ -1,17 +1,18 @@
 import Konva from "konva";
 import type { View } from "../../types.ts";
 import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants.ts";
+import { Cube } from "./Cube.ts";
 
 /**
  * GameScreenView - Renders the game UI using Konva
  */
-export class GameScreenView implements View {
+export class GameScreenView implements View 
+{
 	private group: Konva.Group;
-	private lemonImage: Konva.Image | Konva.Circle | null = null;
-	private scoreText: Konva.Text;
-	private timerText: Konva.Text;
-
-	constructor(onLemonClick: () => void) {
+	private cubes: Cube[] = [];
+	//default value when we run it but it can be changed
+	constructor(numberOfCubes: number = 5, cubeClickHandlers?: ((index: number) => void)[]) 
+	{
 		this.group = new Konva.Group({ visible: false });
 
 		// Background
@@ -24,99 +25,54 @@ export class GameScreenView implements View {
 		});
 		this.group.add(bg);
 
-		// Score display (top-left)
-		this.scoreText = new Konva.Text({
-			x: 20,
-			y: 20,
-			text: "Score: 0",
-			fontSize: 32,
-			fontFamily: "Arial",
-			fill: "black",
-		});
-		this.group.add(this.scoreText);
-
-		// Timer display (top-right)
-		this.timerText = new Konva.Text({
-			x: STAGE_WIDTH - 150,
-			y: 20,
-			text: "Time: 60",
-			fontSize: 32,
-			fontFamily: "Arial",
-			fill: "red",
-		});
-		this.group.add(this.timerText);
-
-		// TODO: Task 2 - Load and display lemon image using Konva.Image.fromURL()
-		// Placeholder circle (remove this when implementing the image)
-		/*
-		const placeholder = new Konva.Circle({
-			x: STAGE_WIDTH / 2,
-			y: STAGE_HEIGHT / 2,
-			radius: 50,
-			fill: "yellow",
-			stroke: "orange",
-			strokeWidth: 3,
-		})
-			.width(100)
-			.height(100);
-		placeholder.on("click", onLemonClick);
-		this.lemonImage = placeholder;
-		this.group.add(this.lemonImage);
-		*/
-		//places the image in the "image" variable
-		Konva.Image.fromURL("/lemon.png", (image) =>
-		{
-			image.on("click",onLemonClick);
-			this.lemonImage = image;
-				// Set position to the center of the stage
-			image.x(STAGE_WIDTH / 2);
-			image.y(STAGE_HEIGHT / 2); // <-- use STAGE_HEIGHT for vertical centering
-			image.scale({ x: 0.5, y: 0.5 }); // half size
-			// Set offset to center the image around its middle point
-			image.offsetX(image.width() / 2);
-			image.offsetY(image.height() / 2);
-			this.group.add(this.lemonImage);
-		});
+		// Create grid of cubes
+		this.createCubeGrid(numberOfCubes, cubeClickHandlers);
 	}
 
 	/**
-	 * Update score display
+	 * Create a grid of cubes based on the number requested
 	 */
-	updateScore(score: number): void {
-		this.scoreText.text(`Score: ${score}`);
-		this.group.getLayer()?.draw();
+	private createCubeGrid(numberOfCubes: number, cubeClickHandlers?: ((index: number) => void)[]): void 
+	{
+		const CUBES_PER_ROW = 5;
+		const MAX_ROWS = 10;
+		const PADDING = 50;
+		const CUBE_SIZE = (.09 * STAGE_WIDTH); //Change to make adaptive based off of stage height / width
+
+		const availableWidth = STAGE_WIDTH - (2 * PADDING);
+		const availableHeight = STAGE_HEIGHT - (2 * PADDING);
+
+		const horizontalSpacing = availableWidth / CUBES_PER_ROW;
+		const verticalSpacing = availableHeight / MAX_ROWS * 2.5; //cube padding and spacing and sizing details
+
+		for (let i = 0; i < numberOfCubes; i++)  //fill in cube amount
+			{
+			const row = Math.floor(i / CUBES_PER_ROW);
+			const col = i % CUBES_PER_ROW;
+
+			// Stop if more cubes than available slots
+			if (row >= MAX_ROWS) break;
+
+			const x = PADDING + (col * horizontalSpacing) + (horizontalSpacing / 2) - (CUBE_SIZE / 2);
+			const y = PADDING + (row * verticalSpacing) + (verticalSpacing / 2) - (CUBE_SIZE / 2);
+
+			const cube = new Cube(x, y, CUBE_SIZE, i + 1); 
+			
+			if (cubeClickHandlers && cubeClickHandlers[i])  //if the cube handler exists 
+			{
+				cube.onClick(() => cubeClickHandlers[i](i)); //use this cube handler
+			} else 
+			{
+				cube.onClick(() => { //default cube behavior if no handler is passed in with controller
+					console.log(`Cube ${i + 1} clicked!`);
+				});
+			}
+
+			this.cubes.push(cube);
+			this.group.add(cube.getGroup());
+		}
 	}
 
-	/**
-	 * Randomize lemon position
-	 */
-	randomizeLemonPosition(): void {
-		if (!this.lemonImage) return;
-
-		// Define safe boundaries (avoid edges)
-		const padding = 100;
-		const minX = padding;
-		const maxX = STAGE_WIDTH - padding;
-		const minY = padding;
-		const maxY = STAGE_HEIGHT - padding;
-
-		// Generate random position
-		const randomX = Math.random() * (maxX - minX) + minX;
-		const randomY = Math.random() * (maxY - minY) + minY;
-
-		// Update lemon position
-		this.lemonImage.x(randomX);
-		this.lemonImage.y(randomY);
-		this.group.getLayer()?.draw();
-	}
-
-	/**
-	 * Update timer display
-	 */
-	updateTimer(timeRemaining: number): void {
-		this.timerText.text(`Time: ${timeRemaining}`);
-		this.group.getLayer()?.draw();
-	}
 
 	/**
 	 * Show the screen
