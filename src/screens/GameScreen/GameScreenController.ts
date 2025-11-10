@@ -41,6 +41,10 @@ export class GameScreenController extends ScreenController {
 		this.startTimer();
 	}
 
+	quitClick(): void {
+		this.screenSwitcher.switchToScreen({type: 'menu'})
+	}
+
 	/**
 	 * Start the countdown timer
 	 */

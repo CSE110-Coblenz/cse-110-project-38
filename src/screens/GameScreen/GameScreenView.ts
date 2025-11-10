@@ -16,6 +16,9 @@ export class GameScreenView implements View {
 	private background_night: Konva.Group
 	private game_ui: Konva.Group
 	private pause_ui: Konva.Group
+	private resume: Konva.Group
+	private quit: Konva.Group
+	private pause: Konva.Group
 	private game_screen: Konva.Group
 	private level1: Konva.Group
 
@@ -30,6 +33,9 @@ export class GameScreenView implements View {
 		this.night_castle = new Konva.Group({ visible: false })
 		this.game_ui = new Konva.Group({ visible: true })
 		this.pause_ui = new Konva.Group({ visible: false })
+		this.resume = new Konva.Group({ visible: true })
+		this.quit = new Konva.Group({ visible: true })
+		this.pause = new Konva.Group ({ visible: true })
 		this.level1 = new Konva.Group({ visible: false })
 		this.game_screen = new Konva.Group({ visible: false })
 
@@ -269,6 +275,10 @@ export class GameScreenView implements View {
 			strokeWidth: 3,
 			cornerRadius: [2, 2, 2, 2],
 		})
+		this.pause.add(pause_dot)
+		this.pause.add(pause_btn)
+		this.pause.add(pause_bar1)
+		this.pause.add(pause_bar2)
 		var quest_box = new Konva.Rect({
 			x: 200,
 			y: 50,
@@ -291,12 +301,13 @@ export class GameScreenView implements View {
 		})
 		this.game_ui.add(info_btn)
 		this.game_ui.add(pause_bar)
-		this.game_ui.add(pause_dot)
-		this.game_ui.add(pause_btn)
-		this.game_ui.add(pause_bar1)
-		this.game_ui.add(pause_bar2)
+		this.game_ui.add(this.pause)
 		this.game_ui.add(quest_box)
 		this.game_ui.add(ans_box)
+
+		this.pause.on('click', () => {
+			this.pause_ui.show()
+		})
 
 		// pause ui
 		var pause_bg = new Konva.Rect({
@@ -327,7 +338,7 @@ export class GameScreenView implements View {
 			padding: 0,
 			align: 'center'
 		});
-		var settings_btn = new Konva.Rect({
+		var resume_btn = new Konva.Rect({
 			x: 300,
 			y: 250,
 			width: 200,
@@ -337,10 +348,10 @@ export class GameScreenView implements View {
 			strokeWidth: 3,
 			cornerRadius: [10, 10, 10, 10],
 		})
-		const settings_text = new Konva.Text({
+		const resume_text = new Konva.Text({
 			x: 300,
 			y: 280,
-			text: "Settings",
+			text: "Resume",
 			fontSize: 36,
 			fontFamily: 'Calibri',
 			width: 200,
@@ -370,10 +381,19 @@ export class GameScreenView implements View {
 		this.pause_ui.add(pause_bg)
 		this.pause_ui.add(game_paused_box)
 		this.pause_ui.add(game_paused_text)
-		this.pause_ui.add(settings_btn)
-		this.pause_ui.add(settings_text)
-		this.pause_ui.add(quit_btn)
-		this.pause_ui.add(quit_text)
+		this.resume.add(resume_btn)
+		this.resume.add(resume_text)
+		this.pause_ui.add(this.resume)
+		this.quit.add(quit_btn)
+		this.quit.add(quit_text)
+		this.pause_ui.add(this.quit)
+
+		this.resume.on('click', () => {
+			this.pause_ui.hide()
+		})
+		this.quit.on('click', () => {
+			
+		})
 
 		// create character
 		var char_head = new Konva.Circle({
