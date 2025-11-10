@@ -54,7 +54,7 @@ export class GameScreenController extends ScreenController {
 				this.view.updateTimer(timeRemaining);
 				if (timeRemaining <= 0)
 				{
-					this.endGame();
+					// this.endGame();
 				}
 			}, 1000 
 		);
@@ -84,7 +84,6 @@ export class GameScreenController extends ScreenController {
 
 		// Update view
 		this.view.updateScore(this.model.getScore());
-		this.view.randomizeLemonPosition();
 
 		// TODO: Task 4 - Play the squeeze sound
 		this.squeezeSound.play();
