@@ -26,3 +26,4 @@ After solving the merge conflict, pull the new main onto local machines and make
 Cleaned up details about universal sizing and expandability for level template
 Todo before the next meeting, resolve merge conflicts and create "test screens" to navigate to placeholders for levels.
 For Monday, work on organizing the level select screen and make sure we can navigate through the different screens.
+ 
