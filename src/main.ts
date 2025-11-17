@@ -53,7 +53,7 @@ class App implements ScreenSwitcher {
 
 
 		// Draw the layer (render everything to the canvas)
-		this.layer.draw();
+		this.layer.draw()
 
 		// Start with menu screen visible
 		this.menuController.getView().show();
