@@ -1,7 +1,7 @@
 import { ScreenController } from "../../types.ts";
 import type { ScreenSwitcher } from "../../types.ts";
-import { GameScreenController } from "../GameScreen/GameScreenController.ts";
-import { GameScreenModel } from "../GameScreen/GameScreenModel.ts";
+import { GameScreenController } from "../GameScreen/GameScreenController/GameScreenController.ts";
+import { GameScreenModel } from "../GameScreen/GameScreenModel/GameScreenModel.ts";
 import { LevelScreenController } from "../LevelScreen/LevelScreenController.ts";
 import { MenuScreenView } from "./MenuScreenView.ts";
 

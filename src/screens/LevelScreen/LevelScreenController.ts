@@ -34,8 +34,7 @@ export class LevelScreenController extends ScreenController {
             (index) => this.startLevel(index),
             (index) => this.startLevel(index),
             (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
+            
         ]);
     }
 

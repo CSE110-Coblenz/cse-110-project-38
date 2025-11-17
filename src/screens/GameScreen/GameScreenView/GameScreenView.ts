@@ -1,7 +1,8 @@
-import Konva from "konva"
-import type { View } from "../../types.ts"
-import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants.ts"
-import { Layer } from "konva/lib/Layer"
+import Konva from "konva";
+import type { View } from "../../../types.ts";
+import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants.ts";
+import { Layer } from "konva/lib/Layer";
+import { PlayerView } from "./PlayerView"; // <-- no .ts extension
 
 /**
  * GameScreenView - Renders the game UI using Konva
@@ -9,7 +10,7 @@ import { Layer } from "konva/lib/Layer"
 export class GameScreenView implements View {
 	private day_castle: Konva.Group
 	private night_castle: Konva.Group
-	private character: Konva.Group
+	private character: PlayerView;  //PLAYER VIEW CLASS NOW IN SEPERATE FILE 
 	private enemy1: Konva.Group
 	private background_day: Konva.Group
 	private background_dawn: Konva.Group
@@ -28,7 +29,10 @@ export class GameScreenView implements View {
 		this.background_day = new Konva.Group({ visible: false })
 		this.background_dawn = new Konva.Group({ visible: true })
 		this.background_night = new Konva.Group({ visible: false })
-		this.character = new Konva.Group({visible: true })
+		
+		// initialize PlayerView instead of raw Konva.Group
+		this.character = new PlayerView(175, 380); // starting position
+
 		this.enemy1 = new Konva.Group({ visible: true })
 		this.day_castle = new Konva.Group({ visible: true })
 		this.night_castle = new Konva.Group({ visible: false })
@@ -380,73 +384,13 @@ export class GameScreenView implements View {
 		this.pause_ui.add(quit_text)
 
 		// create character
-		var char_head = new Konva.Circle({
-			x: 175,
-			y: 380,
-			width: 35,
-			height: 35,
-			fill: 'white',
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var char_body = new Konva.Line({
-			points: [175, 398, 175, 425],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var char_leg1 = new Konva.Line({
-			points: [175, 425, 155, 470],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var char_leg2 = new Konva.Line({
-			points: [175, 425, 195, 470],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var char_arm1 = new Konva.Line({
-			points: [175, 410, 160, 405, 170, 403],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var char_arm2 = new Konva.Line({
-			points: [175, 410, 195, 403],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var bow_string = new Konva.Line({
-			points: [185, 385, 170, 403, 185, 421],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var bow_arc = new Konva.Line({
-			points: [185, 385, 195, 403, 185, 421],
-			stroke: 'black',
-			strokeWidth: 3,
-			tension: 0.5
-		})
-		var arrow = new Konva.Line({
-			points: [170, 403, 205, 403],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
-		var arrow_head = new Konva.Line({
-			points: [200, 398, 205, 403, 200, 408],
-			stroke: 'black',
-			strokeWidth: 3,
-		})
 		
-		this.character.add(char_head)
-		this.character.add(char_body)
-		this.character.add(char_leg1)
-		this.character.add(char_leg2)
-		this.character.add(char_arm1)
-		this.character.add(char_arm2)
-		this.character.add(bow_string)
-		this.character.add(bow_arc)
-		this.character.add(arrow)
-		this.character.add(arrow_head)
-		
+        // -------------------
+        // Player setup using PlayerView
+        // -------------------
+        this.character = new PlayerView(175, 380); // starting position
+        // add the player Konva group to the main game screen
+        this.game_screen.add(this.character.getNode());
 		// create enemy variants
 
 		// wizard
@@ -738,7 +682,7 @@ export class GameScreenView implements View {
 		this.game_screen.add(this.background_day)
 		this.game_screen.add(this.background_dawn)
 		this.game_screen.add(this.background_night)
-		this.game_screen.add(this.character)
+		this.game_screen.add(this.character.getNode())
 		this.game_screen.add(this.enemy1)
 		this.game_screen.add(this.day_castle)
 		this.game_screen.add(this.night_castle)
@@ -807,7 +751,7 @@ export class GameScreenView implements View {
 		this.background_day.visible(false);
 		this.background_dawn.visible(false);
 		this.background_night.visible(false);
-		this.character.visible(false);
+		this.character.getNode().visible(false);
 		this.enemy1.visible(false);
 		this.day_castle.visible(false);
 		this.night_castle.visible(false);
