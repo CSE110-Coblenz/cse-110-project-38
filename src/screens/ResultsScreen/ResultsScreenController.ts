@@ -30,7 +30,7 @@ export class ResultsScreenController extends ScreenController {
 	showResults(finalScore: number): void {
 		this.model.setFinalScore(finalScore);
 		this.view.updateFinalScore(finalScore);
-		this.view.updateStars();
+		this.view.updateStars(this.model.getStars());
 
 		// Load and update leaderboard
 		const entries = this.loadLeaderboard();
