@@ -14,6 +14,17 @@ export class ResultsScreenModel {
 	private leaderboard: LeaderboardEntry[] = [];
 
 	/**
+	 * Get stars
+	 */
+	getStars(): number {
+		// Get Stars
+		let stored = localStorage.getItem("numStars");
+		let num_stars = stored ? JSON.parse(stored) : 0;
+		localStorage.setItem("numStars", JSON.stringify(0));
+		return num_stars
+	}
+
+	/**
 	 * Set the final score
 	 */
 	setFinalScore(score: number): void {

@@ -1,6 +1,7 @@
 import Konva from "konva"
 import type { View } from "../../types.ts"
-import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants.ts"
+import { STAGE_WIDTH, STAGE_HEIGHT, GAME_DURATION } from "../../constants.ts"
+import { PLAYER_POSITION, ENEMY_POSITION } from "../../constants";
 import { Layer } from "konva/lib/Layer"
 
 /**
@@ -9,8 +10,10 @@ import { Layer } from "konva/lib/Layer"
 export class GameScreenView implements View {
 	private dayCastle: Konva.Group
 	private nightCastle: Konva.Group
-	private character: Konva.Group
-	private enemy1: Konva.Group
+	private player: Konva.Group
+	private playerAttack: Konva.Group
+	private enemy: Konva.Group
+	private enemyAttack: Konva.Group
 	private backgroundDay: Konva.Group
 	private backgroundDawn: Konva.Group
 	private backgroundNight: Konva.Group
@@ -22,6 +25,7 @@ export class GameScreenView implements View {
 	private playerInputGroup: Konva.Group
 	private questText: Konva.Text
 	private ansText: Konva.Text
+	private timerText: Konva.Text
 	private inputTextArea: HTMLTextAreaElement
 	private gameScreen: Konva.Group
 	private level1: Konva.Group
@@ -39,18 +43,21 @@ export class GameScreenView implements View {
 		this.backgroundDay = new Konva.Group({ visible: true })
 		this.backgroundDawn = new Konva.Group({ visible: true })
 		this.backgroundNight = new Konva.Group({ visible: true })
-		this.character = new Konva.Group({visible: true })
-		this.enemy1 = new Konva.Group({ visible: true })
+		this.player = new Konva.Group({ visible: true })
+		this.playerAttack = new Konva.Group({ visible: true })
+		this.enemy = new Konva.Group({ visible: true })
+		this.enemyAttack = new Konva.Group({ visible: true })
 		this.dayCastle = new Konva.Group({ visible: true })
 		this.nightCastle = new Konva.Group({ visible: true })
 		this.gameUI = new Konva.Group({ visible: true })
 		this.pauseUI = new Konva.Group({ visible: false })
-		this.pauseGroup = new Konva.Group({ visible: true})
-		this.resumeGroup = new Konva.Group({ visible: true})
-		this.quitGroup = new Konva.Group({ visible: true})
-		this.playerInputGroup = new Konva.Group({ visible: true})
+		this.pauseGroup = new Konva.Group({ visible: true })
+		this.resumeGroup = new Konva.Group({ visible: true })
+		this.quitGroup = new Konva.Group({ visible: true })
+		this.playerInputGroup = new Konva.Group({ visible: true })
 		this.ansText = new Konva.Text
 		this.questText = new Konva.Text
+		this.timerText = new Konva.Text
 		this.inputTextArea = document.createElement('textarea')
 		this.level1 = new Konva.Group({ visible: false })
 		this.level2 = new Konva.Group({ visible: false })
@@ -67,12 +74,13 @@ export class GameScreenView implements View {
 		// this.createLevel5()
 
 		this.createEventHandlers(onPauseClick, onResumeClick, onQuitClick, onKeyPress, onEnter)
-		
+
 		// scale to screen
 		this.gameScreen.scaleX(STAGE_WIDTH / 800)
 		this.gameScreen.scaleY(STAGE_HEIGHT / 600)
 	}
-		/**
+
+	/**
 	 * Show a temporary level screen dynamically
 	 */
 	showTempLevel(levelNumber: number): void {
@@ -84,7 +92,7 @@ export class GameScreenView implements View {
 
 		// Create new temp level group
 		this.tempLevelGroup = new Konva.Group({ visible: true });
-		
+
 		// Use base dimensions (800x600) - scaling is handled by gameScreen parent
 		const bg = new Konva.Rect({
 			x: 0,
@@ -110,8 +118,8 @@ export class GameScreenView implements View {
 		this.backgroundDay.visible(false);
 		this.backgroundDawn.visible(false);
 		this.backgroundNight.visible(false);
-		this.character.visible(false);
-		this.enemy1.visible(false);
+		this.player.visible(false);
+		this.enemy.visible(false);
 		this.dayCastle.visible(false);
 		this.nightCastle.visible(false);
 		this.gameUI.visible(false);
@@ -144,14 +152,15 @@ export class GameScreenView implements View {
 		this.gameScreen.getLayer()?.draw()
 	}
 
-
-	// helper functions 
+	/**
+	 * Helper functions
+	 */
 	getGroup(): Konva.Group {
 		return this.gameScreen
 	}
 
 	togglePauseOverlay(): void {
-		if(this.pauseUI.isVisible()) {
+		if (this.pauseUI.isVisible()) {
 			this.pauseUI.hide()
 		} else {
 			this.pauseUI.show()
@@ -159,7 +168,7 @@ export class GameScreenView implements View {
 	}
 
 	getAns(): string {
-		return this.ansText.text()
+		return this.ansText.text().trim();
 	}
 
 	updateAnsBox(): void {
@@ -175,33 +184,35 @@ export class GameScreenView implements View {
 		this.questText.text('Current Input: \n' + playerInput)
 	}
 
-
-	// create levels
+	/**
+	 * Level creation
+	 */
 	createLevel1(): void {
 
 		// dawn background
 		this.addBgDawn()
-		
+
 		// game ui
 		this.addGameUI()
 
 		// pause ui
 		this.addPauseUI()
 
-		// create character
-		this.addCharacter()
-	
+		// create player
+		this.addPlayer()
+		this.addPlayerAttack()
 
-		// wizard
-		this.addWiz()
-		
+		// create enemy
+		this.addEnemy()
+		this.addEnemyAttack()
+
 		// create towers
 		this.addDayCastle()
 
 		// merge groups
 		this.gameScreen.add(this.backgroundDawn)
-		this.gameScreen.add(this.character)
-		this.gameScreen.add(this.enemy1)
+		this.gameScreen.add(this.player)
+		this.gameScreen.add(this.enemy)
 		this.gameScreen.add(this.dayCastle)
 		this.gameScreen.add(this.gameUI)
 		this.gameScreen.add(this.pauseUI)
@@ -217,20 +228,20 @@ export class GameScreenView implements View {
 		// pause ui
 		this.addPauseUI()
 
-		// create character
-		this.addCharacter()
-	
+		// create player
+		this.addPlayer()
+
 
 		// wizard
-		this.addWiz()
-		
+		this.addEnemy()
+
 		// create towers
 		this.addDayCastle()
 
 		// merge groups
 		this.gameScreen.add(this.backgroundDay)
-		this.gameScreen.add(this.character)
-		this.gameScreen.add(this.enemy1)
+		this.gameScreen.add(this.player)
+		this.gameScreen.add(this.enemy)
 		this.gameScreen.add(this.dayCastle)
 		this.gameScreen.add(this.gameUI)
 		this.gameScreen.add(this.pauseUI)
@@ -246,21 +257,21 @@ export class GameScreenView implements View {
 		// pause ui
 		this.addPauseUI()
 
-		// create character
-		this.addCharacter()
-		
+		// create player
+		this.addPlayer()
+
 		// create enemy variants
 
 		// wizard
-		this.addWiz()
+		this.addEnemy()
 
 		// night castle
 		this.addNightCastle()
 
 		// merge groups
 		this.gameScreen.add(this.backgroundNight)
-		this.gameScreen.add(this.character)
-		this.gameScreen.add(this.enemy1)
+		this.gameScreen.add(this.player)
+		this.gameScreen.add(this.enemy)
 		this.gameScreen.add(this.nightCastle)
 		this.gameScreen.add(this.gameUI)
 		this.gameScreen.add(this.pauseUI)
@@ -282,14 +293,14 @@ export class GameScreenView implements View {
 		// pause ui
 		this.addPauseUI()
 
-		// create character
-		this.addCharacter()
-		
+		// create player
+		this.addPlayer()
+
 		// create enemy variants
 
 		// wizard
-		this.addWiz()
-		
+		this.addEnemy()
+
 		// create towers
 		this.addDayCastle()
 
@@ -300,8 +311,8 @@ export class GameScreenView implements View {
 		this.gameScreen.add(this.backgroundDay)
 		this.gameScreen.add(this.backgroundDawn)
 		this.gameScreen.add(this.backgroundNight)
-		this.gameScreen.add(this.character)
-		this.gameScreen.add(this.enemy1)
+		this.gameScreen.add(this.player)
+		this.gameScreen.add(this.enemy)
 		this.gameScreen.add(this.dayCastle)
 		this.gameScreen.add(this.nightCastle)
 		this.gameScreen.add(this.gameUI)
@@ -324,14 +335,14 @@ export class GameScreenView implements View {
 		// pause ui
 		this.addPauseUI()
 
-		// create character
-		this.addCharacter()
-		
+		// create player
+		this.addPlayer()
+
 		// create enemy variants
 
 		// wizard
-		this.addWiz()
-		
+		this.addEnemy()
+
 		// create towers
 		this.addDayCastle()
 
@@ -342,17 +353,18 @@ export class GameScreenView implements View {
 		this.gameScreen.add(this.backgroundDay)
 		this.gameScreen.add(this.backgroundDawn)
 		this.gameScreen.add(this.backgroundNight)
-		this.gameScreen.add(this.character)
-		this.gameScreen.add(this.enemy1)
+		this.gameScreen.add(this.player)
+		this.gameScreen.add(this.enemy)
 		this.gameScreen.add(this.dayCastle)
 		this.gameScreen.add(this.nightCastle)
 		this.gameScreen.add(this.gameUI)
 		this.gameScreen.add(this.pauseUI)
 
 	}
-	
 
-	// create level components
+	/**
+	 * Level components
+	 */
 	addBgDay(): void {
 		const bgDay = new Konva.Rect({
 			x: 0,
@@ -382,7 +394,7 @@ export class GameScreenView implements View {
 		this.backgroundDay.add(bgDay)
 		this.backgroundDay.add(bgDayField)
 		this.backgroundDay.add(bgDaySun)
-		
+
 	}
 	addBgDawn(): void {
 		const bgDawn = new Konva.Rect({
@@ -392,9 +404,9 @@ export class GameScreenView implements View {
 			height: 600,
 			// fill: 'blue'
 			fillPriority: 'radial-gradient',
-			fillRadialGradientStartPoint: {x: 400, y: 500},
+			fillRadialGradientStartPoint: { x: 400, y: 500 },
 			fillRadialGradientStartRadius: 0,
-			fillRadialGradientEndPoint: {x: 400, y: 500},
+			fillRadialGradientEndPoint: { x: 400, y: 500 },
 			fillRadialGradientEndRadius: 500,
 			fillRadialGradientColorStops: [0, '#FFF2BD', 0.2, '#F4D797', 0.4, '#EBB58A', 0.6, '#DA7F7D', 0.8, '#B5728E', 1, '#776E99'],
 
@@ -427,7 +439,7 @@ export class GameScreenView implements View {
 			y: 0,
 			width: 800,
 			height: 600,
-			fill: "#000c5c", 
+			fill: "#000c5c",
 		})
 		var bgNightMoon = new Konva.Circle({
 			x: 700,
@@ -538,7 +550,7 @@ export class GameScreenView implements View {
 			sceneFunc: function (context, shape) {
 				context.beginPath()
 				context.moveTo(0, 0) // Relative to the shape's x, y
-				for(let i: number = 5; i < 800; i += 40) {
+				for (let i: number = 5; i < 800; i += 40) {
 					context.lineTo(i + 20, 0)
 					context.lineTo(i + 20, 20)
 					context.lineTo(i + 40, 20)
@@ -549,7 +561,7 @@ export class GameScreenView implements View {
 				context.lineTo(0, 40)
 				context.closePath()
 				context.fillStrokeShape(shape)
-  			},
+			},
 		})
 
 		this.backgroundNight.add(bgNight)
@@ -566,11 +578,11 @@ export class GameScreenView implements View {
 		this.backgroundNight.add(nightCastleWall)
 		this.backgroundNight.add(nightCren)
 	}
-	addGameUI() : void {
+	addGameUI(): void {
 		var infoBtn = new Konva.Rect({
 			x: 25,
 			y: 25,
-			width: 50, 
+			width: 50,
 			height: 50,
 			fill: 'grey',
 			stroke: 'black',
@@ -580,7 +592,7 @@ export class GameScreenView implements View {
 		var infoBar = new Konva.Rect({
 			x: 45,
 			y: 47,
-			width: 10, 
+			width: 10,
 			height: 20,
 			fill: 'black',
 			stroke: 'black',
@@ -599,7 +611,7 @@ export class GameScreenView implements View {
 		var pauseBtn = new Konva.Rect({
 			x: 725,
 			y: 25,
-			width: 50, 
+			width: 50,
 			height: 50,
 			fill: 'grey',
 			stroke: 'black',
@@ -609,7 +621,7 @@ export class GameScreenView implements View {
 		var pauseBar1 = new Konva.Rect({
 			x: 735,
 			y: 35,
-			width: 10, 
+			width: 10,
 			height: 30,
 			fill: 'black',
 			stroke: 'black',
@@ -619,7 +631,7 @@ export class GameScreenView implements View {
 		var pauseBar2 = new Konva.Rect({
 			x: 755,
 			y: 35,
-			width: 10, 
+			width: 10,
 			height: 30,
 			fill: 'black',
 			stroke: 'black',
@@ -669,18 +681,30 @@ export class GameScreenView implements View {
 			align: 'center'
 		});
 
+		// Timer display 
+		this.timerText = new Konva.Text({
+			x: 340,
+			y: 10,
+			text: `Time: ${GAME_DURATION}`,
+			fontSize: 32,
+			fontFamily: "Arial",
+			fill: "gold",
+			stroke: "red",
+			strokeWidth: 1,
+		});
+
+		// Input display
 		this.inputTextArea = document.createElement('textarea')
 		document.body.appendChild(this.inputTextArea)
 		this.inputTextArea.style.position = 'absolute'
 		this.inputTextArea.style.display = 'none'
 		this.inputTextArea.style.zIndex = '0'
 
-
 		this.playerInputGroup.on('click', () => {
 			var textPosition = this.ansText.absolutePosition();
 			this.inputTextArea.style.left = textPosition.x - 1000 + 'px';
-			this.inputTextArea.style.top = textPosition.y - 1000 + 'px'; 
-			this.inputTextArea.style.width = (this.ansText.width() *  STAGE_WIDTH /  800)+ 'px';
+			this.inputTextArea.style.top = textPosition.y - 1000 + 'px';
+			this.inputTextArea.style.width = (this.ansText.width() * STAGE_WIDTH / 800) + 'px';
 			this.inputTextArea.style.height = (this.ansText.height() * STAGE_HEIGHT / 600) + 'px';
 			this.inputTextArea.value = '';
 			this.inputTextArea.style.display = 'block';
@@ -698,6 +722,7 @@ export class GameScreenView implements View {
 		this.gameUI.add(this.questText)
 		this.playerInputGroup.add(ansBox)
 		this.playerInputGroup.add(this.ansText)
+		this.gameUI.add(this.timerText)
 		this.gameUI.add(this.playerInputGroup)
 	}
 	addPauseUI(): void {
@@ -779,10 +804,10 @@ export class GameScreenView implements View {
 		this.quitGroup.add(quitText)
 		this.pauseUI.add(this.quitGroup)
 	}
-	addCharacter(): void {
+	addPlayer(): void {
 		var charHead = new Konva.Circle({
-			x: 175,
-			y: 380,
+			x: 0,
+			y: 0,
 			width: 35,
 			height: 35,
 			fill: 'white',
@@ -790,67 +815,111 @@ export class GameScreenView implements View {
 			strokeWidth: 3,
 		})
 		var charBody = new Konva.Line({
-			points: [175, 398, 175, 425],
+			points: [0, 18, 0, 45],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var charLeg1 = new Konva.Line({
-			points: [175, 425, 155, 470],
+			points: [0, 45, -20, 90],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var charLeg2 = new Konva.Line({
-			points: [175, 425, 195, 470],
+			points: [0, 45, 20, 90],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var charArm1 = new Konva.Line({
-			points: [175, 410, 160, 405, 170, 403],
+			points: [0, 30, -15, 25, -5, 23],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var charArm2 = new Konva.Line({
-			points: [175, 410, 195, 403],
+			points: [0, 30, 20, 23],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var bowString = new Konva.Line({
-			points: [185, 385, 170, 403, 185, 421],
+			points: [10, 5, -5, 23, 10, 41],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var bowArc = new Konva.Line({
-			points: [185, 385, 195, 403, 185, 421],
+			points: [10, 5, 20, 23, 10, 41],
 			stroke: 'black',
 			strokeWidth: 3,
 			tension: 0.5
 		})
 		var arrow = new Konva.Line({
-			points: [170, 403, 205, 403],
+			points: [-5, 23, 30, 23],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var arrowHead = new Konva.Line({
-			points: [200, 398, 205, 403, 200, 408],
+			points: [25, 18, 30, 23, 25, 28],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
-		
-		this.character.add(charHead)
-		this.character.add(charBody)
-		this.character.add(charLeg1)
-		this.character.add(charLeg2)
-		this.character.add(charArm1)
-		this.character.add(charArm2)
-		this.character.add(bowString)
-		this.character.add(bowArc)
-		this.character.add(arrow)
-		this.character.add(arrowHead)
+		var fullHealth = new Konva.Rect({
+			name: 'full',
+			x: -50,
+			y: -40,
+			width: 100,
+			height: 10,
+			fill: 'gray',
+			stroke: 'black',
+			strokeWidth: 3,
+			cornerRadius: [10, 10, 10, 10],
+		})
+		var remainingHealth = new Konva.Rect({
+			name: 'remaining',
+			x: -50,
+			y: -40,
+			width: 100,
+			height: 10,
+			fill: 'green',
+			stroke: 'black',
+			strokeWidth: 3,
+			cornerRadius: [10, 10, 10, 10],
+		})
+
+		this.player.add(charHead)
+		this.player.add(charBody)
+		this.player.add(charLeg1)
+		this.player.add(charLeg2)
+		this.player.add(charArm1)
+		this.player.add(charArm2)
+		this.player.add(bowString)
+		this.player.add(bowArc)
+		this.player.add(arrow)
+		this.player.add(arrowHead)
+		this.player.add(fullHealth)
+		this.player.add(remainingHealth)
+		this.player.x(PLAYER_POSITION.x)
+		this.player.y(PLAYER_POSITION.y)
+
 	}
-	addWiz(): void {
+	addPlayerAttack(): void {
+		var arrow = new Konva.Line({
+			points: [-5, 23, 30, 23],
+			stroke: 'black',
+			strokeWidth: 3,
+		});
+
+		var arrowHead = new Konva.Line({
+			points: [25, 18, 30, 23, 25, 28],
+			stroke: 'black',
+			strokeWidth: 3,
+		});
+		this.playerAttack.add(arrow)
+		this.playerAttack.add(arrowHead)
+		this.playerAttack.x(175)
+		this.playerAttack.y(380)
+	}
+	addEnemy(): void {
 		var wizHead = new Konva.Circle({
-			x: 625,
-			y: 380,
+			x: 0,
+			y: 0,
 			width: 35,
 			height: 35,
 			fill: 'white',
@@ -858,28 +927,28 @@ export class GameScreenView implements View {
 			strokeWidth: 3,
 		})
 		var wizBody = new Konva.Line({
-			points: [625, 398, 625, 425],
+			points: [0, 18, 0, 45],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizLeg1 = new Konva.Line({
-			points: [625, 425, 645, 470],
+			points: [0, 45, 20, 90],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizLeg2 = new Konva.Line({
-			points: [625, 425, 605, 470],
+			points: [0, 45, -20, 90],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizBrim = new Konva.Line({
-			points: [600, 370, 650, 370],
+			points: [-25, -10, 25, -10],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizHat = new Konva.Shape({
-			x: 608,
-			y: 370,
+			x: -17,
+			y: -10,
 			fill: 'blue',
 			stroke: "black",
 			strokeWidth: 3,
@@ -890,38 +959,77 @@ export class GameScreenView implements View {
 				context.lineTo(34, 0)
 				context.closePath()
 				context.fillStrokeShape(shape)
-  			},
+			},
 		})
 		var wizArms = new Konva.Line({
-			points: [605, 405, 625, 410, 645, 400],
+			points: [-20, 25, 0, 30, 20, 20],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizStaff = new Konva.Line({
-			points: [595, 385, 615, 425],
+			points: [-30, 5, -10, 45],
 			stroke: 'black',
 			strokeWidth: 3,
 		})
 		var wizOrb = new Konva.Circle({
-			x: 590,
-			y: 375,
+			x: -35,
+			y: -5,
 			width: 20,
 			height: 20,
 			fill: 'orange',
 			stroke: 'black',
 			strokeWidth: 3,
 		})
+		var fullHealth = new Konva.Rect({
+			name: 'full',
+			x: -50,
+			y: -40,
+			width: 100,
+			height: 10,
+			fill: 'gray',
+			stroke: 'black',
+			strokeWidth: 3,
+			cornerRadius: [10, 10, 10, 10],
+		})
+		var remainingHealth = new Konva.Rect({
+			name: 'remaining',
+			x: -50,
+			y: -40,
+			width: 100,
+			height: 10,
+			fill: 'green',
+			stroke: 'black',
+			strokeWidth: 3,
+			cornerRadius: [10, 10, 10, 10],
+		})
 
-
-		this.enemy1.add(wizHead)
-		this.enemy1.add(wizBody)
-		this.enemy1.add(wizLeg1)
-		this.enemy1.add(wizLeg2)
-		this.enemy1.add(wizBrim)
-		this.enemy1.add(wizHat)
-		this.enemy1.add(wizArms)
-		this.enemy1.add(wizStaff)
-		this.enemy1.add(wizOrb)
+		this.enemy.add(wizHead)
+		this.enemy.add(wizBody)
+		this.enemy.add(wizLeg1)
+		this.enemy.add(wizLeg2)
+		this.enemy.add(wizBrim)
+		this.enemy.add(wizHat)
+		this.enemy.add(wizArms)
+		this.enemy.add(wizStaff)
+		this.enemy.add(wizOrb)
+		this.enemy.add(fullHealth)
+		this.enemy.add(remainingHealth)
+		this.enemy.x(ENEMY_POSITION.x)
+		this.enemy.y(ENEMY_POSITION.y)
+	}
+	addEnemyAttack(): void {
+		var wizOrb = new Konva.Circle({
+			x: -35,
+			y: -5,
+			width: 20,
+			height: 20,
+			fill: 'orange',
+			stroke: 'black',
+			strokeWidth: 3,
+		});
+		this.enemyAttack.add(wizOrb)
+		this.enemyAttack.x(625)
+		this.enemyAttack.y(380)
 	}
 	addDayCastle(): void {
 		var castle1 = new Konva.Rect({
@@ -942,7 +1050,7 @@ export class GameScreenView implements View {
 			sceneFunc: function (context, shape) {
 				context.beginPath()
 				context.moveTo(0, 0) // Relative to the shape's x, y
-				for(let i: number = -10; i < 230; i += 40) {
+				for (let i: number = -10; i < 230; i += 40) {
 					context.lineTo(i + 20, 0)
 					context.lineTo(i + 20, 20)
 					context.lineTo(i + 40, 20)
@@ -953,7 +1061,7 @@ export class GameScreenView implements View {
 				context.lineTo(0, 40)
 				context.closePath()
 				context.fillStrokeShape(shape)
-  			},
+			},
 		})
 		var castle1Window1 = new Konva.Rect({
 			x: 50,
@@ -977,7 +1085,7 @@ export class GameScreenView implements View {
 			strokeWidth: 3
 
 		})
-		
+
 		var castle2 = new Konva.Rect({
 			x: 570,
 			y: 470,
@@ -996,7 +1104,7 @@ export class GameScreenView implements View {
 			sceneFunc: function (context, shape) {
 				context.beginPath()
 				context.moveTo(0, 0)
-				for(let i: number = 10; i > -230; i -= 40) {
+				for (let i: number = 10; i > -230; i -= 40) {
 					context.lineTo(i - 20, 0)
 					context.lineTo(i - 20, 20)
 					context.lineTo(i - 40, 20)
@@ -1007,7 +1115,7 @@ export class GameScreenView implements View {
 				context.lineTo(0, 40)
 				context.closePath()
 				context.fillStrokeShape(shape)
-  			},
+			},
 		})
 		var castle2Window1 = new Konva.Rect({
 			x: 620,
@@ -1051,7 +1159,7 @@ export class GameScreenView implements View {
 			sceneFunc: function (context, shape) {
 				context.beginPath()
 				context.moveTo(0, 0) // Relative to the shape's x, y
-				for(let i: number = -10; i < 800; i += 40) {
+				for (let i: number = -10; i < 800; i += 40) {
 					context.lineTo(i + 20, 0)
 					context.lineTo(i + 20, 20)
 					context.lineTo(i + 40, 20)
@@ -1062,7 +1170,7 @@ export class GameScreenView implements View {
 				context.lineTo(0, 40)
 				context.closePath()
 				context.fillStrokeShape(shape)
-  			},
+			},
 		})
 		var nightWindow1 = new Konva.Rect({
 			x: 87.5,
@@ -1100,7 +1208,113 @@ export class GameScreenView implements View {
 		this.nightCastle.add(nightWindow3)
 	}
 
-	// create event handlers
+	/**
+	 *	Character and characterAttack animations helper functions
+	 */
+	attackPlayer(remaining: number) {
+		return this.playAttack(this.enemy, this.player, this.enemyAttack, remaining);
+	}
+
+	attackEnemy(remaining: number) {
+		return this.playAttack(this.player, this.enemy, this.playerAttack, remaining);
+	}
+
+	playAttack(from: Konva.Group, to: Konva.Group, attackSprite: Konva.Group, remaining: number): Promise<void> {
+		return new Promise((resolve) => {
+			const startX = from.x();
+			const startY = from.y();
+			const targetX = to.x();
+			const targetY = to.y();
+			const direction = startX < targetX ? 1 : -1;
+
+			attackSprite.scale({ x: direction, y: 1 });
+			attackSprite.position({ x: direction === 1 ? startX : startX - 75, y: startY });
+			attackSprite.opacity(1);
+			this.gameScreen.add(attackSprite);
+
+			const attackTween = new Konva.Tween({
+				node: attackSprite,
+				x: targetX - 35,
+				y: targetY,
+				duration: 1,
+				easing: Konva.Easings.EaseIn,
+				onFinish: () => {
+
+					const impactTween = new Konva.Tween({
+						node: attackSprite,
+						duration: 0.2,
+						easing: Konva.Easings.EaseOut,
+						onFinish: () => {
+
+							this.playHitEffect(to);
+
+							attackSprite.opacity(0);
+							attackSprite.remove();
+							this.updateHealth(to, remaining);
+							resolve();  // ⬅️ animation completely finished
+						}
+					});
+
+					impactTween.play();
+				}
+			});
+
+			attackTween.play();
+		});
+	}
+
+	updateHealth(to: Konva.Group, remaining: number) {
+		let remainingHealth = to.findOne('.remaining') as Konva.Rect;
+		const fullHealth = to.findOne('.full') as Konva.Rect;
+		remainingHealth.width((remaining / 100) * fullHealth.width())
+	}
+
+	playHitEffect(character: Konva.Group): void {
+		const originalFilter = character.filters();
+		const redFilter = Konva.Filters.RGBA;
+
+		character.cache();
+		character.filters([redFilter]);
+		character.red(255);
+		character.green(40);
+		character.blue(40);
+
+		setTimeout(() => {
+			character.filters(originalFilter);
+			character.clearCache();
+		}, 150);
+	}
+
+	playerDefeated() {
+		return this.playDefeat(this.player);
+	}
+
+	enemyDefeated() {
+		return this.playDefeat(this.enemy);
+	}
+
+	async playDefeat(character: Konva.Group): Promise<void> {
+		return new Promise((resolve) => {
+			new Konva.Tween({
+				node: character,
+				opacity: 0,
+				scaleX: 0.3,
+				scaleY: 0.3,
+				duration: 0.5,
+				easing: Konva.Easings.EaseIn,
+				onFinish: () => {
+					character.visible(false);
+					character.opacity(1);
+					character.scale({ x: 1, y: 1 });
+					resolve();
+				}
+			}).play();
+		});
+	}
+
+	/**
+	 * Event Handlers
+	 */
 	createEventHandlers(onPauseClick: () => void, onResumeClick: () => void, onQuitClick: () => void, onKeyPress: () => void, onEnter: (event: KeyboardEvent) => void): void {
 		this.pauseGroup.on('click', onPauseClick)
 		this.resumeGroup.on('click', onResumeClick)
@@ -1109,6 +1323,33 @@ export class GameScreenView implements View {
 		this.inputTextArea.addEventListener('keydown', (e) => onEnter(e))
 	}
 
+	/**
+	 * Update timer display
+	 */
+	updateTimer(timeRemaining: number): void {
+		this.timerText.text(`Time: ${timeRemaining}`);
+		this.gameUI.getLayer()?.draw();
+	}
 
-	
+	/**
+	 * Reset the view
+	 */
+	reset() {
+
+		this.resetAnsBox();
+
+		this.player.visible(true);
+		this.enemy.visible(true);
+
+		let playerRemainingHealth = this.player.findOne(".remaining") as Konva.Rect;
+		let playerFullHealth = this.player.findOne(".full") as Konva.Rect;
+		playerRemainingHealth.width(playerFullHealth.width());
+
+		let enemyRemainingHealth = this.enemy.findOne(".remaining") as Konva.Rect;
+		let enemyFullHealth = this.enemy.findOne(".full") as Konva.Rect;
+		enemyRemainingHealth.width(enemyFullHealth.width());
+
+		this.updateTimer(GAME_DURATION);
+	}
+
 }

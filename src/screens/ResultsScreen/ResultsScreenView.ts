@@ -46,9 +46,6 @@ export class ResultsScreenView implements View {
 		title.offsetY(title.height() / 2);
 		this.group.add(title);
 
-		// Get Stars
-		this.group.add(this.updateStars(3));
-
 		// Final score display
 		this.finalScoreText = new Konva.Text({
 			x: this.background.x(),
@@ -113,7 +110,10 @@ export class ResultsScreenView implements View {
 		this.group.add(playAgainButtonGroup);
 	}
 
-	updateStars(num_stars: number): Konva.Group {
+	/**
+	 * Update the stars earned
+	 */
+	updateStars(num_stars: number): void {
 		const starGroup = new Konva.Group();
 		const offset = this.background.width() > this.background.height() ? this.background.height() / 4 : this.background.width() / 4;
 
@@ -134,8 +134,7 @@ export class ResultsScreenView implements View {
 
 			starGroup.add(star);
 		}
-
-		return starGroup;
+		this.group.add(starGroup);
 	}
 
 	/**
