@@ -24,18 +24,13 @@ export class LevelScreenController extends ScreenController {
 
         // Initialize the game view with cubes
         // 3 cubes by default, each with its own click handler
-        this.view = new LevelScreenView(11, [
+        this.view = new LevelScreenView(6, [
             (index) => this.startLevel(index),  // cube level selecter
             (index) => this.startLevel(index),       // Other cubes start levels
             (index) => this.startLevel(index),
             (index) => this.startLevel(index),
             (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
-            (index) => this.startLevel(index),
+            () => this.navigateMenuScreen(),
         ]);
     }
 
@@ -75,6 +70,12 @@ export class LevelScreenController extends ScreenController {
             score: this.model.getScore(),
         });
     }
+    private navigateMenuScreen(): void {
+    this.screenSwitcher.switchToScreen({
+        type: "menu",
+    });
+}
+
 
     /**
      * Get the final score
