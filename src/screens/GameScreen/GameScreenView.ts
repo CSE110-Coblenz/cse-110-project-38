@@ -110,11 +110,11 @@ export class GameScreenView implements View {
 				break;
 			case 4: 
 				// this.createLevel4()
-				this.level4.show();
+				this.level3.show();
 				break;
 			case 5: 
 				// this.createLevel5()
-				this.level5.show();
+				this.level3.show();
 				break; 
 
 		}
@@ -214,13 +214,24 @@ export class GameScreenView implements View {
 		this.ansText.text(this.inputTextArea.value);
 	}
 
+	refocusInput(): void {
+		// Trigger the same focus behavior as clicking the answer box
+		const textPosition = this.ansText.absolutePosition();
+		this.inputTextArea.style.left = textPosition.x - 1000 + 'px';
+		this.inputTextArea.style.top = textPosition.y - 1000 + 'px';
+		this.inputTextArea.style.width = (this.ansText.width() * STAGE_WIDTH / 800) + 'px';
+		this.inputTextArea.style.height = (this.ansText.height() * STAGE_HEIGHT / 600) + 'px';
+		this.inputTextArea.style.display = 'block';
+		this.inputTextArea.focus();
+	}
+
 	resetAnsBox(): void {
 		this.inputTextArea.value = ''
 		this.ansText.text('')
 	}
 
-	updateText(playerInput: string): void {
-		this.questText.text('Current Input: \n' + playerInput)
+	displayQuestion(question: string): void {
+		this.questText.text(question)
 	}
 
 	/**
@@ -691,7 +702,7 @@ export class GameScreenView implements View {
 			x: 200,
 			y: 70,
 			text: '',
-			fontSize: 36,
+			fontSize: 24,
 			fontFamily: 'Calibri',
 			width: 400,
 			height: 200,
@@ -731,19 +742,6 @@ export class GameScreenView implements View {
 			stroke: "red",
 			strokeWidth: 1,
 		});
-
-		// Input display (textarea created in constructor)
-
-		this.playerInputGroup.on('click', () => {
-			var textPosition = this.ansText.absolutePosition();
-			this.inputTextArea.style.left = textPosition.x - 1000 + 'px';
-			this.inputTextArea.style.top = textPosition.y - 1000 + 'px';
-			this.inputTextArea.style.width = (this.ansText.width() * STAGE_WIDTH / 800) + 'px';
-			this.inputTextArea.style.height = (this.ansText.height() * STAGE_HEIGHT / 600) + 'px';
-			this.inputTextArea.value = '';
-			this.inputTextArea.style.display = 'block';
-			this.inputTextArea.focus();
-		})
 
 		this.gameUI.add(infoBtn)
 		this.gameUI.add(infoBar)
@@ -1285,7 +1283,7 @@ export class GameScreenView implements View {
 							attackSprite.opacity(0);
 							attackSprite.remove();
 							this.updateHealth(to, remaining);
-							resolve();  // ⬅️ animation completely finished
+							resolve();
 						}
 					});
 
@@ -1354,7 +1352,28 @@ export class GameScreenView implements View {
 		this.resumeGroup.on('click', onResumeClick)
 		this.quitGroup.on('click', onQuitClick)
 		this.inputTextArea.addEventListener('input', onKeyPress)
-		this.inputTextArea.addEventListener('keydown', (e) => onEnter(e))
+		this.inputTextArea.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				try {
+					this.ansText.text(this.inputTextArea.value);
+					this.gameUI.getLayer()?.batchDraw();
+				} catch (err) {}
+				this.inputTextArea.style.display = 'none';
+				try { this.inputTextArea.blur(); } catch (err) { }
+				onEnter(e as KeyboardEvent);
+			}
+		})
+		this.playerInputGroup.on('click', () => {
+			var textPosition = this.ansText.absolutePosition();
+			this.inputTextArea.style.left = textPosition.x - 1000 + 'px';
+			this.inputTextArea.style.top = textPosition.y - 1000 + 'px';
+			this.inputTextArea.style.width = (this.ansText.width() * STAGE_WIDTH / 800) + 'px';
+			this.inputTextArea.style.height = (this.ansText.height() * STAGE_HEIGHT / 600) + 'px';
+			this.inputTextArea.value = '';
+			this.inputTextArea.style.display = 'block';
+			this.inputTextArea.focus();
+		})
 	}
 
 	/**
