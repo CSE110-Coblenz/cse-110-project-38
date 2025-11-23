@@ -8,15 +8,15 @@ import { Layer } from "konva/lib/Layer"
  * GameScreenView - Renders the game UI using Konva
  */
 export class GameScreenView implements View {
-	private dayCastle: Konva.Group | null = null
-	private nightCastle: Konva.Group | null = null
+	private dayCastle: Konva.Group
+	private nightCastle: Konva.Group
 	private player: Konva.Group
 	private playerAttack: Konva.Group
 	private enemy: Konva.Group
 	private enemyAttack: Konva.Group
-	private backgroundDay: Konva.Group | null = null
-	private backgroundDawn: Konva.Group | null = null
-	private backgroundNight: Konva.Group | null = null
+	private backgroundDay: Konva.Group
+	private backgroundDawn: Konva.Group
+	private backgroundNight: Konva.Group
 	private gameUI: Konva.Group
 	private pauseUI: Konva.Group
 	private pauseGroup: Konva.Group
@@ -28,51 +28,16 @@ export class GameScreenView implements View {
 	private timerText: Konva.Text
 	private inputTextArea: HTMLTextAreaElement
 	private gameScreen: Konva.Group
-	//private level1: Konva.Group | null = null
-	//private level2: Konva.Group | null = null
-	//private level3: Konva.Group | null = null
-	//private level4: Konva.Group | null = null
-	//private level5: Konva.Group | null = null
+	private level1: Konva.Group
+	private level2: Konva.Group
+	private level3: Konva.Group
+	private level4: Konva.Group
+	private level5: Konva.Group
 
-	
+	// ------------------- TEMP LEVEL -------------------
+	private tempLevelGroup: Konva.Group | null = null; // temp level placeholder
+	// -------------------------------------------------
 
-	private eventCallbacks: {
-	onPauseClick: () => void;
-	onResumeClick: () => void;
-	onQuitClick: () => void;
-	onKeyPress: () => void;
-	onEnter: (event: KeyboardEvent) => void;
-} | null = null;
-
-
-	constructor(onPauseClick: () => void, onResumeClick: () => void, onQuitClick: () => void, onKeyPress: () => void, onEnter: (event: KeyboardEvent) => void) {
-   		//universal level elements initlized
-		this.player = new Konva.Group()
-		this.enemy = new Konva.Group()
-		this.playerAttack = new Konva.Group()
-		this.enemyAttack = new Konva.Group()
-		this.gameUI = new Konva.Group()
-		this.pauseUI = new Konva.Group({ visible: false })
-		this.pauseGroup = new Konva.Group()
-		this.resumeGroup = new Konva.Group()
-		this.quitGroup = new Konva.Group()
-		this.playerInputGroup = new Konva.Group()
-		this.ansText = new Konva.Text()
-		this.questText = new Konva.Text()
-		this.timerText = new Konva.Text()
-		this.inputTextArea = document.createElement('textarea')
-		// Only create the main container
-		this.gameScreen = new Konva.Group({ visible: false })
-		
-		// Scale to screen
-		this.gameScreen.scaleX(STAGE_WIDTH / 800)
-		this.gameScreen.scaleY(STAGE_HEIGHT / 600)
-		
-		// Setup event handlers
-		this.createEventHandlers(onPauseClick, onResumeClick, onQuitClick, onKeyPress, onEnter)
-	}
-	/*
-	//Moving the specific levels into their own functions
 	constructor(onPauseClick: () => void, onResumeClick: () => void, onQuitClick: () => void, onKeyPress: () => void, onEnter: (event: KeyboardEvent) => void) {
 		// initialize Groups
 		this.backgroundDay = new Konva.Group({ visible: true })
@@ -102,7 +67,7 @@ export class GameScreenView implements View {
 		this.gameScreen = new Konva.Group({ visible: false })
 
 		//initialize visual components
-		//this.createLevel1()
+		this.createLevel1()
 		//this.createLevel2()
 		//this.createLevel3()
 		//this.createLevel4()
@@ -114,8 +79,64 @@ export class GameScreenView implements View {
 		this.gameScreen.scaleX(STAGE_WIDTH / 800)
 		this.gameScreen.scaleY(STAGE_HEIGHT / 600)
 	}
-	*/
 
+	/**
+	 * Show a temporary level screen dynamically
+	 */
+	showTempLevel(levelNumber: number): void {
+		// Remove old temp level if exists
+		if (this.tempLevelGroup) {
+			this.tempLevelGroup.destroy();
+			this.tempLevelGroup = null;
+		}
+
+		// Create new temp level group
+		this.tempLevelGroup = new Konva.Group({ visible: true });
+
+		// Use base dimensions (800x600) - scaling is handled by gameScreen parent
+		const bg = new Konva.Rect({
+			x: 0,
+			y: 0,
+			width: 800,  // Base width
+			height: 600, // Base height
+			fill: "rgba(0,0,0,0.8)",
+		});
+		this.tempLevelGroup.add(bg);
+
+		// Big text showing level
+		const text = new Konva.Text({
+			text: `Level ${levelNumber}`,
+			fontSize: 72,  // Fixed size for base dimensions
+			fontFamily: "Arial",
+			fill: "white",
+		});
+		text.x((800 - text.width()) / 2);
+		text.y((600 - text.height()) / 2);
+		this.tempLevelGroup.add(text);
+
+		// Hide all other main groups
+		this.backgroundDay.visible(false);
+		this.backgroundDawn.visible(false);
+		this.backgroundNight.visible(false);
+		this.player.visible(false);
+		this.enemy.visible(false);
+		this.dayCastle.visible(false);
+		this.nightCastle.visible(false);
+		this.gameUI.visible(false);
+		this.pauseUI.visible(false);
+
+		// Add to main gameScreen BEFORE setting visibility
+		this.gameScreen.add(this.tempLevelGroup);
+
+		// Make gameScreen visible if it isn't already
+		this.gameScreen.visible(true);
+
+		// Draw the layer
+		const layer = this.gameScreen.getLayer();
+		if (layer) {
+			layer.batchDraw();
+		}
+	}
 	/**
 	 * Show the screen
 	 */
@@ -168,13 +189,6 @@ export class GameScreenView implements View {
 	 */
 	createLevel1(): void {
 
-		//this.clearLevel(); //cleans up leftover artifacts
-		// ===== Initialize Level-Specific Groups =====
-		this.backgroundDawn = new Konva.Group()
-		this.dayCastle = new Konva.Group()
-
-
-
 		// dawn background
 		this.addBgDawn()
 
@@ -205,11 +219,6 @@ export class GameScreenView implements View {
 
 	}
 	createLevel2(): void {
-		//this.clearLevel(); //cleans up leftover artifacts
-
-		this.backgroundDay = new Konva.Group()
-		this.dayCastle = new Konva.Group()
-
 		// dawn background
 		this.addBgDay()
 
@@ -239,12 +248,6 @@ export class GameScreenView implements View {
 
 	}
 	createLevel3(): void {
-
-
-		//this.clearLevel(); //cleans up leftover artifacts
-
-		this.backgroundNight = new Konva.Group()
-		this.nightCastle = new Konva.Group()
 		// night Background
 		this.addBgNight()
 
@@ -275,15 +278,6 @@ export class GameScreenView implements View {
 
 	}
 	createLevel4(): void {
-
-		//this.clearLevel(); //cleans up leftover artifacts
-
-		this.backgroundDay = new Konva.Group()
-		this.backgroundDawn = new Konva.Group()
-		this.backgroundNight = new Konva.Group()
-		this.dayCastle = new Konva.Group()
-		this.nightCastle = new Konva.Group()
-
 		// day background
 		this.addBgDay()
 
@@ -326,15 +320,6 @@ export class GameScreenView implements View {
 
 	}
 	createLevel5(): void {
-
-		//this.clearLevel(); //cleans up leftover artifacts
-
-		this.backgroundDay = new Konva.Group()
-		this.backgroundDawn = new Konva.Group()
-		this.backgroundNight = new Konva.Group()
-		this.dayCastle = new Konva.Group()
-		this.nightCastle = new Konva.Group()
-
 		// day background
 		this.addBgDay()
 
@@ -1367,41 +1352,4 @@ export class GameScreenView implements View {
 		this.updateTimer(GAME_DURATION);
 	}
 
-	
-	/**
- * Clear all level-specific content before loading a new level
- */
-/*
-	private clearLevel(): void {
-		// Remove all children from gameScreen
-		this.gameScreen.destroyChildren();
-		
-		// Reset level-specific groups to null
-		this.backgroundDay = null;
-		this.backgroundDawn = null;
-		this.backgroundNight = null;
-		this.dayCastle = null;
-		this.nightCastle = null;
-		
-		// Clear universal groups but DON'T destroy them (keeps event handlers intact)
-		this.player.destroyChildren();
-		this.enemy.destroyChildren();
-		this.playerAttack.destroyChildren();
-		this.enemyAttack.destroyChildren();
-		this.gameUI.destroyChildren();
-		this.pauseUI.destroyChildren();
-		this.pauseGroup.destroyChildren();
-		this.resumeGroup.destroyChildren();
-		this.quitGroup.destroyChildren();
-		this.playerInputGroup.destroyChildren();
-		
-		// Recreate text objects (they were destroyed with their parents)
-		this.ansText = new Konva.Text();
-		this.questText = new Konva.Text();
-		this.timerText = new Konva.Text();
-		
-		// Clear textarea value
-		this.inputTextArea.value = '';
-	}
-	*/
 }

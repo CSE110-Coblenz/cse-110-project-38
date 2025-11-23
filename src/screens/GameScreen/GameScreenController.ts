@@ -139,7 +139,6 @@ export class GameScreenController extends ScreenController {
 		return this.view;
 	}
 
-	/*
 	//TEMPORARY LEVEL VIEW FOR TESTING
 	startTempLevel(levelNumber: number): void {
 		console.log(`Showing temp level ${levelNumber}`);
@@ -147,42 +146,40 @@ export class GameScreenController extends ScreenController {
 		// Call view function to show temp level overlay
 		this.view.showTempLevel(levelNumber);
 	}
-	*/
 	beginLevel(levelNumber: number): void {
 
-			// Reset model state
-		this.model.reset();
-		this.numStars = 0;
-		console.log(`Showing level ${levelNumber}`);
+				// Reset model state
+			this.model.reset();
+			this.numStars = 0;
+			console.log(`Showing level ${levelNumber}`);
 
 
-		switch (levelNumber) {
-			case 1:
-				this.view.createLevel1();
-				break;
-			case 2:
-				this.view.createLevel2();
-				break;
-			case 3:
-				this.view.createLevel3();
-				break;
-			case 4:
-				this.view.createLevel4();
-				break;
-			case 5:
-				this.view.createLevel5();
-				break;
-			default:
-				console.warn(`Level ${levelNumber} does not exist`);
-				break;
+			switch (levelNumber) {
+				case 1:
+					this.view.createLevel1();
+					break;
+				case 2:
+					this.view.createLevel2();
+					break;
+				case 3:
+					this.view.createLevel3();
+					break;
+				case 4:
+					this.view.createLevel4();
+					break;
+				case 5:
+					this.view.createLevel5();
+					break;
+				default:
+					console.warn(`Level ${levelNumber} does not exist`);
+					break;
+			}
+
+			this.view.reset();
+			this.view.show();
+			this.startTimer();
 		}
-
-		this.view.reset();
-		this.view.show();
-		this.startTimer();
-	}
-
-	/**
+		/**
  * Start a specific level (efficient dispatch)
  * @param levelNumber - Index of the level to start
  */
@@ -198,23 +195,15 @@ export class GameScreenController extends ScreenController {
 			1: () => {
 				console.log("Starting Level 1");
 				// Normal game logic 
-				this.beginLevel(1);  //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
+				this.startGame();  //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
 			},
 			2: () => {
 				console.log("Starting Level 2");
-				this.beginLevel(2); //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
+				this.startTempLevel(2); //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
 			},
 			3: () => {
 				console.log("Starting Level 3");
-				this.beginLevel(3); //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
-			},
-			4: () => {
-				console.log("Starting Level 4");
-				this.beginLevel(4);
-			},
-			5: () => {
-				console.log("Starting Level 5");
-				this.beginLevel(5);
+				this.startTempLevel(3); //TODO CHANGE TO REAL LEVEL LOGIC CALL LEVEL FUNCTION HERE
 			},
 		};
 
