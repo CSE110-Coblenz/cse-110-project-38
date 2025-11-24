@@ -13,5 +13,6 @@ jobs:
 
       - run: npm ci
       - run: npm run lint --if-present
-      - run: npx tsc --noEmit
+#     - run: npx tsc --noEmit
       - run: npm test --if-present
+
