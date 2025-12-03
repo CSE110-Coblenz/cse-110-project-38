@@ -44,7 +44,7 @@ export class MenuScreenView implements View {
 		this.title = new Konva.Text({
 			x: this.background.x(),
 			y: this.background.y() - 0.25 * (this.background.height()),
-			text: "PROJECT-38",
+			text: "SpellSmasher",
 			fontSize: this.background.width() > this.background.height() ? this.background.height() * 0.07 : this.background.width() * 0.07,
 			fontFamily: "Arial",
 			fill: "yellow",
