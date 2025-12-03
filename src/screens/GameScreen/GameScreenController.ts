@@ -14,7 +14,7 @@ export class GameScreenController extends ScreenController {
 	private screenSwitcher: ScreenSwitcher;
 	private gameTimer: number | null = null;
 	private isAnimating: boolean = false;
-	private numStars: number = 3;
+	private numStars: number = 0;
 	private playerInput: string = '';
 	private paused: boolean = false;
 
@@ -140,9 +140,9 @@ export class GameScreenController extends ScreenController {
 			await this.view.attackPlayer(this.model.getPlayerHealth());
 			if(this.model.getPlayerHealth() <= 40) {
 				this.numStars = 1;
-			} else if(this.model.getPlayerHealth() <= 80) {
+			} else if(this.model.getPlayerHealth() <= 60) {
 				this.numStars = 2;
-			} else {
+			} else if(this.model.getPlayerHealth() > 60) {
 				this.numStars = 3;
 			}
 			if (!this.model.isPlayerAlive()) {
